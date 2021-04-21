@@ -76,3 +76,10 @@ export function computeBoundaries({columns, types}) {
 export function css(el, styles = {}) {
     Object.assign(el.style, styles);
 }
+
+export function toCoords(xRatio, yRatio, dHeight, padding) {
+    return (col) => col.map((y, i) => [
+        Math.floor((i - 1) * xRatio),
+        Math.floor(dHeight - padding - y * yRatio)
+    ]).filter((_, i) => i !== 0)
+}

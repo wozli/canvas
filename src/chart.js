@@ -1,5 +1,6 @@
-import {toDate, isOver, line, circle, computeBoundaries, css} from './utils'
+import {toDate, isOver, line, circle, computeBoundaries, css, toCoords} from './utils'
 import {tooltip} from './tooltip'
+import {sliderChart} from "./slider";
 
 const WIDTH = 600;
 const HEIGHT = 200;
@@ -12,9 +13,11 @@ const ROWS_COUNT = 5;
 const CIRCLE_RADIUS = 8;
 
 export function chart(root, data) {
-    const canvas = root.querySelector('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = root.querySelector('[data-el="main"]');
     const tip = tooltip(root.querySelector('[data-el="tooltip"]'));
+    const ctx = canvas.getContext('2d');
+    const slider = sliderChart(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
+
     let raf;
 
     css(canvas, {
@@ -68,7 +71,7 @@ export function chart(root, data) {
         yAxis(yMin, yMax);
         xAxis(xData, yData, xRatio);
 
-        yData.map(toCoords(xRatio, yRatio)).forEach((coords, index) => {
+        yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING)).forEach((coords, index) => {
             const color = data.colors[yData[index][0]];
             line(ctx, coords, {color});
 
@@ -149,10 +152,5 @@ export function chart(root, data) {
     }
 }
 
-function toCoords(xRatio, yRatio) {
-    return (col) => col.map((y, i) => [
-        Math.floor((i - 1) * xRatio),
-        Math.floor(DPI_HEIGHT - PADDING - y * yRatio)
-    ]).filter((_, i) => i !== 0)
-}
+
 
