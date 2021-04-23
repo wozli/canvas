@@ -14,16 +14,21 @@ const template = (data) => `
     </ul>
 `
 
-export function tooltip(el) {
-    const clear = () => (el.innerHTML = '')
+export function tooltip(el, wCanvas) {
+    const clear = () => (el.innerHTML = '');
+    const middle = wCanvas / 2;
+
     return {
         show({left, top}, data) {
             clear();
             const {height, width} = el.getBoundingClientRect();
+
+            const pLeft = (left > middle ? left - width - 30 : left + 30);
+
             css(el,{
                 display: 'block',
                 top: `${top - height}px`,
-                left: `${(left + width) / 2}px`
+                left: `${pLeft}px`
             });
             el.insertAdjacentHTML('afterbegin',template(data))
         },

@@ -77,9 +77,17 @@ export function css(el, styles = {}) {
     Object.assign(el.style, styles);
 }
 
-export function toCoords(xRatio, yRatio, dHeight, padding) {
+export function toCoords(xRatio, yRatio, dHeight, padding, yMin) {
     return (col) => col.map((y, i) => [
         Math.floor((i - 1) * xRatio),
-        Math.floor(dHeight - padding - y * yRatio)
+        Math.floor(dHeight - padding - (y - yMin) / yRatio)
     ]).filter((_, i) => i !== 0)
+}
+
+export function computeYRatio(height, max, min) {
+    return (max - min) / height
+}
+
+export function computeXRatio(width, length) {
+    return width / (length - 2)
 }

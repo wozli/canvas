@@ -1,4 +1,4 @@
-import {toDate, isOver, line, circle, computeBoundaries, css, toCoords} from './utils'
+import {toDate, isOver, line, circle, computeBoundaries, css, toCoords, computeYRatio, computeXRatio} from './utils'
 import {tooltip} from './tooltip'
 import {sliderChart} from "./slider";
 
@@ -14,7 +14,7 @@ const CIRCLE_RADIUS = 8;
 
 export function chart(root, data) {
     const canvas = root.querySelector('[data-el="main"]');
-    const tip = tooltip(root.querySelector('[data-el="tooltip"]'));
+    const tip = tooltip(root.querySelector('[data-el="tooltip"]'), WIDTH);
     const ctx = canvas.getContext('2d');
     const slider = sliderChart(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
 
@@ -34,6 +34,10 @@ export function chart(root, data) {
             raf = requestAnimationFrame(paint)
             return result
         }
+    })
+
+    slider.subscribe((pos) => {
+        proxy.pos = pos;
     })
 
     function mousemove({clientX, clientY}) {
@@ -61,17 +65,29 @@ export function chart(root, data) {
 
     function paint() {
         clear();
-        const [yMin, yMax] = computeBoundaries(data);
-        const yRatio = VIEW_HEIGHT / (yMax - yMin);
-        const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
+        const length = data.columns[0].length;
+        const leftIndex = Math.round((length * proxy.pos[0]) / 100);
+        const rightIndex = Math.round((length * proxy.pos[1]) / 100);
 
-        const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
-        const xData = data.columns.filter((col) => data.types[col[0]] !== 'line')[0];
+        const columns = data.columns.map(col => {
+            const res =col.slice(leftIndex, rightIndex);
+            if (typeof res[0] !== 'string') {
+                res.unshift(col[0]);
+            }
+            return res
+        })
 
-        yAxis(yMin, yMax);
-        xAxis(xData, yData, xRatio);
+        const [yMin, yMax] = computeBoundaries({columns, types: data.types});
 
-        yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING)).forEach((coords, index) => {
+        const yRatio = computeYRatio(VIEW_HEIGHT, yMax, yMin);
+        const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length)
+
+        const yData = columns.filter((col) => data.types[col[0]] === 'line');
+        const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
+
+
+
+        yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin)).forEach((coords, index) => {
             const color = data.colors[yData[index][0]];
             line(ctx, coords, {color});
 
@@ -82,6 +98,9 @@ export function chart(root, data) {
                 }
             }
         })
+
+        yAxis(yMin, yMax);
+        xAxis(xData, yData, xRatio);
     }
 
     function yAxis(yMin, yMax) {
