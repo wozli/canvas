@@ -11,6 +11,8 @@ const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const VIEW_WIDTH = DPI_WIDTH;
 const ROWS_COUNT = 5;
 const CIRCLE_RADIUS = 8;
+const SPEED = 300;
+
 
 export function chart(root, data) {
     const canvas = root.querySelector('[data-el="main"]');
@@ -19,6 +21,7 @@ export function chart(root, data) {
     const slider = sliderChart(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
 
     let raf;
+    let prevMax;
 
     css(canvas, {
         width : `${WIDTH}px`,
@@ -62,6 +65,10 @@ export function chart(root, data) {
     function clear() {
         ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
     }
+    
+    // function translateX(length, xRatio, left) {
+    //     return -1 * Math.round((left * length * xRatio) / 100)
+    // }
 
     function paint() {
         clear();
@@ -79,13 +86,22 @@ export function chart(root, data) {
 
         const [yMin, yMax] = computeBoundaries({columns, types: data.types});
 
+
+        //
+        // if (!prevMax) {
+        //     prevMax = yMax;
+        //     proxy.max = yMax;
+        // }
+        //
+        // const max = getMax(yMax);
+
         const yRatio = computeYRatio(VIEW_HEIGHT, yMax, yMin);
-        const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length)
+        const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
+
+       // const translate = translateX(data.columns[0].length, xRatio, proxy.pos[0]);
 
         const yData = columns.filter((col) => data.types[col[0]] === 'line');
         const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
-
-
 
         yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin)).forEach((coords, index) => {
             const color = data.colors[yData[index][0]];
@@ -101,6 +117,19 @@ export function chart(root, data) {
 
         yAxis(yMin, yMax);
         xAxis(xData, yData, xRatio);
+    }
+
+    function getMax(yMax) {
+        const step = (yMax - prevMax) / SPEED;
+
+        if (proxy.max < yMax) {
+            proxy.max += step;
+        } else if (proxy.max > yMax) {
+            proxy.max = yMax;
+            prevMax = yMax;
+        }
+
+        return proxy.max;
     }
 
     function yAxis(yMin, yMax) {

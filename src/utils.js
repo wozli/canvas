@@ -29,23 +29,27 @@ export function isOver(mouse, x, length, dWidth) {
 
 export function line(ctx, coords, {color}) {
     ctx.beginPath();
+   // ctx.save();
     ctx.lineWidth = 4;
+   // ctx.translate(translate, 0);
     ctx.strokeStyle = color;
     for (const [x, y] of coords) {
-        // ctx.lineTo(x, DPI_HEIGHT - PADDING - y * yRatio);
         ctx.lineTo(x, y);
         ctx.stroke()
     }
+   // ctx.restore();
     ctx.closePath();
 }
 
 export function circle(ctx, [x,y], color, cRadius) {
     ctx.beginPath();
+
     ctx.strokeStyle = color;
     ctx.fillStyle = '#fff';
     ctx.arc(x,y, cRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+
     ctx.closePath();
 }
 
